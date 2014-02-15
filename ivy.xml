@@ -143,6 +143,9 @@
     <!-- bnd -->
     
     <dependency org="biz.aQute" name="bnd" rev="1.50.0" conf="bnd->default" />
+
+    <!-- Java Beans support for Android -->
+    <dependency org="com.madrobot" name="madrobotbeans" rev="0.1" conf="build.base->default" />
     
     <!-- As the tests surely run on Ant, it's a provided dependency. -->
     

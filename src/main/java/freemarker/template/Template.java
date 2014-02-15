@@ -68,8 +68,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Vector;
 
-import javax.swing.tree.TreePath;
-
 import freemarker.cache.TemplateLoader;
 import freemarker.core.Configurable;
 import freemarker.core.Environment;
@@ -80,6 +78,7 @@ import freemarker.core.ParseException;
 import freemarker.core.TemplateElement;
 import freemarker.core.TextBlock;
 import freemarker.core.TokenMgrError;
+import freemarker.core._TreePath;
 import freemarker.debug.impl.DebuggerService;
 
 /**
@@ -697,7 +696,7 @@ public class Template extends Configurable {
      * @param column the column
      * @param line the line
      */
-    public TreePath containingElements(int column, int line) {
+    public _TreePath containingElements(int column, int line) {
         ArrayList elements = new ArrayList();
         TemplateElement element = rootElement;
 mainloop:
@@ -715,7 +714,7 @@ mainloop:
         if (elements == null || elements.isEmpty()) {
             return null;
         }
-        return new TreePath(elements.toArray());
+        return new _TreePath(elements.toArray());
     }
 
     static public class WrongEncodingException extends ParseException {

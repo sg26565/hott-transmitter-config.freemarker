@@ -51,8 +51,12 @@
  */
 package freemarker.core;
 
+import java.util.Enumeration;
+import java.util.Vector;
+
 import javax.swing.JTree;
 import javax.swing.tree.DefaultTreeModel;
+import javax.swing.tree.TreeNode;
 
 import freemarker.template.Template;
 
@@ -62,11 +66,12 @@ import freemarker.template.Template;
 public class FreeMarkerTree extends JTree {
 
     public FreeMarkerTree(Template template) {
-        super(template.getRootTreeNode());
+        setTemplate(template);
     }
 
     public void setTemplate(Template template) {
-        this.setModel(new DefaultTreeModel(template.getRootTreeNode()));
+        TreeNode treeNode = new TreeNodeConverter(template.getRootTreeNode());
+        this.setModel(new DefaultTreeModel(treeNode));
         this.invalidate();
     }
 
@@ -79,5 +84,73 @@ public class FreeMarkerTree extends JTree {
         }
         return value.toString();
     }
-    
+      
+    /**
+     * Convert a {@link freemarker.core._TreeNode} to {@link javax.swing.tree.TreeNode}.
+     * 
+     * @author oli@treichels.de
+     */
+    private class TreeNodeConverter implements TreeNode {
+        private final _TreeNode delegate;
+        
+        private TreeNodeConverter(_TreeNode delegate) {
+            this.delegate = delegate;            
+        }
+               
+        /* (non-Javadoc)
+         * @see javax.swing.tree.TreeNode#getChildAt(int)
+         */
+        public TreeNode getChildAt(int childIndex) {
+            return new TreeNodeConverter(delegate.getChildAt(childIndex));
+        }
+
+        /* (non-Javadoc)
+         * @see javax.swing.tree.TreeNode#getChildCount()
+         */
+        public int getChildCount() {
+            return delegate.getChildCount();
+        }
+
+        /* (non-Javadoc)
+         * @see javax.swing.tree.TreeNode#getParent()
+         */
+        public TreeNode getParent() {
+            return new TreeNodeConverter(delegate.getParent());
+        }
+
+        /* (non-Javadoc)
+         * @see javax.swing.tree.TreeNode#getIndex(javax.swing.tree.TreeNode)
+         */
+        public int getIndex(TreeNode node) {
+            return delegate.getIndex(((TreeNodeConverter)node).delegate);
+        }
+
+        /* (non-Javadoc)
+         * @see javax.swing.tree.TreeNode#getAllowsChildren()
+         */
+        public boolean getAllowsChildren() {
+            return delegate.getAllowsChildren();
+        }
+
+        /* (non-Javadoc)
+         * @see javax.swing.tree.TreeNode#isLeaf()
+         */
+        public boolean isLeaf() {
+            return delegate.isLeaf();
+        }
+
+        /* (non-Javadoc)
+         * @see javax.swing.tree.TreeNode#children()
+         */
+        public Enumeration children() {
+            Enumeration enumeration = delegate.children();
+            Vector treeNodes = new Vector();
+
+            while (enumeration.hasMoreElements()) {
+                treeNodes.add(new TreeNodeConverter((_TreeNode) enumeration.nextElement()));
+            }
+            
+            return treeNodes.elements();
+        }        
+    }
 }

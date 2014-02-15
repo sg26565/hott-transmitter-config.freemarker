@@ -52,9 +52,6 @@
 
 package freemarker.ext.beans;
 
-import java.beans.IndexedPropertyDescriptor;
-import java.beans.PropertyDescriptor;
-import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -114,7 +111,7 @@ implements
     // Cached template models that implement member properties and methods for this
     // instance. Keys are FeatureDescriptor instances (from classCache values),
     // values are either ReflectionMethodModels/ReflectionScalarModels
-    private HashMap memberMap;
+    HashMap memberMap;
 
     /**
      * Creates a new model that wraps the specified object. Note that there are
@@ -245,63 +242,7 @@ implements
         InvocationTargetException,
         TemplateModelException
     {
-        // See if this particular instance has a cached implementation
-        // for the requested feature descriptor
-        TemplateModel member;
-        synchronized(this) {
-            if(memberMap != null) {
-                member = (TemplateModel)memberMap.get(desc);
-            }
-            else {
-                member = null;
-            }
-        }
-
-        if(member != null)
-            return member;
-
-        TemplateModel retval = UNKNOWN;
-        if(desc instanceof IndexedPropertyDescriptor)
-        {
-            Method readMethod = 
-                ((IndexedPropertyDescriptor)desc).getIndexedReadMethod(); 
-            retval = member = 
-                new SimpleMethodModel(object, readMethod, 
-                        BeansWrapper.getArgTypes(classInfo, readMethod), wrapper);
-        }
-        else if(desc instanceof PropertyDescriptor)
-        {
-            PropertyDescriptor pd = (PropertyDescriptor)desc;
-            retval = wrapper.invokeMethod(object, pd.getReadMethod(), null);
-            // (member == null) condition remains, as we don't cache these
-        }
-        else if(desc instanceof Field)
-        {
-            retval = wrapper.wrap(((Field)desc).get(object));
-            // (member == null) condition remains, as we don't cache these
-        }
-        else if(desc instanceof Method)
-        {
-            Method method = (Method)desc;
-            retval = member = new SimpleMethodModel(object, method, 
-                    BeansWrapper.getArgTypes(classInfo, method), wrapper);
-        }
-        else if(desc instanceof OverloadedMethods)
-        {
-            retval = member = 
-                new OverloadedMethodsModel(object, (OverloadedMethods)desc);
-        }
-        
-        // If new cacheable member was created, cache it
-        if(member != null) {
-            synchronized(this) {
-                if(memberMap == null) {
-                    memberMap = new HashMap();
-                }
-                memberMap.put(desc, member);
-            }
-        }
-        return retval;
+        return BeansIntrospector.getInstance().invokeThroughDescriptor(this, desc, classInfo);
     }
 
     protected TemplateModel invokeGenericGet(Map keyMap, Class clazz, String key)
